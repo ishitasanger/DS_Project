@@ -1,5 +1,7 @@
 #pragma once
 #include <string>
+#include <map>
+#include <utility>
 using namespace std;
 
 struct AllocResult {
@@ -15,7 +17,11 @@ struct ReleaseResult {
 
 class Storage {
 public:
+    int n;                               // total blocks
+    map<string, pair<int,int>> table;    // pid -> (start, size)
+
     Storage(int n);                                               // M1 fills this
-    AllocResult allocate(string pid, int size, string strategy);  // you (M2)
-    ReleaseResult release(string pid);                            // you (M2)
+    string validate(string pid, int size);                        // M2
+    AllocResult allocate(string pid, int size, string strategy);  // M2
+    ReleaseResult release(string pid);                            // M2
 };
