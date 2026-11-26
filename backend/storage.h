@@ -35,6 +35,23 @@ struct Stats {
     double utilisation;
     double avg_hole;
 };
+
+// ===== M4: Failure analysis and compaction =====
+struct FailureAnalysis {
+    string reason;
+    string explanation;
+    int total_free;
+    int largest_hole;
+};
+
+struct CompactionReport {
+    Stats before;
+    Stats after;
+    int segments_before;
+    int segments_after;
+    int moved_blocks;
+};
+
 // M2: one record of the event log
 struct LogEntry {
     int step;
@@ -73,4 +90,13 @@ public:
     vector<LogEntry> log;                                                          // M2
     void add_log(string op, string pid, int size, string result, string reason);   // M2
     bool export_log_csv(string filename);                                          // M2
+
+// M4: classify a failed allocation using current free-space metrics.
+FailureAnalysis analyze_failure(int request_size);
+
+// M4: slide processes toward the beginning of storage.
+CompactionReport compact();
+
+// M4: try allocation, compact only for fragmentation, then retry once.
+AllocResult allocate_with_compaction(string pid, int size, string strategy);
 };
