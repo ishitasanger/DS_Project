@@ -33,7 +33,15 @@ struct Stats {
     double utilisation;
     double avg_hole;
 };
-
+// M2: one record of the event log
+struct LogEntry {
+    int step;
+    string op;
+    string pid;
+    int size;
+    string result;
+    string reason;
+};
 class Storage {
 public:
     int n;                               // M2
@@ -59,5 +67,7 @@ public:
     AllocResult allocate(string pid, int size, string strategy);
     ReleaseResult release(string pid);
     FreeNode* find_first_fit(int size);   // M2 temporary, M3 will replace
-    int count_free();                     // M2
+    int count_free();    
+    vector<LogEntry> log;                                                          // M2
+    void add_log(string op, string pid, int size, string result, string reason);   // M2// M2
 };
