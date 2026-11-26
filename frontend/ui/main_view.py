@@ -154,7 +154,7 @@ class MainView(ttk.Frame):
         frame = tk.Frame(parent, bg=CANVAS_BG)
         frame.pack(fill="both", expand=True, padx=pad, pady=(4, 4))
 
-        ctrl_tile = RoundedTile(frame, width=320, height=760, bg_color=TILE_BG)
+        ctrl_tile = RoundedTile(frame, width=320, height=1000, bg_color=TILE_BG)
         ctrl_tile.pack(side="left", anchor="nw", padx=(0, pad))
         self._build_controls(ctrl_tile.inner)
 
@@ -302,7 +302,7 @@ class MainView(ttk.Frame):
         self._msg_label = tk.Label(
             parent, textvariable=self._msg_var,
             font=(FONT_FAMILY, FONT_SIZE_SMALL), bg=TILE_BG,
-            fg=TEXT_SECONDARY, wraplength=230, justify="left",
+            fg=TEXT_SECONDARY, wraplength=270, justify="left",
         )
         self._msg_label.pack(anchor="w", pady=(6, 0))
 
@@ -456,6 +456,7 @@ class MainView(ttk.Frame):
     def _on_compact(self):
         """Run storage compaction and refresh dashboard."""
         self.ctrl.compact()
+        self.ctrl.notebook.select(2)
         self._show_msg("Compaction complete.", "success")
         self.refresh()
 
