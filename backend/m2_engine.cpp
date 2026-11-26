@@ -42,6 +42,17 @@ int Storage::count_free() {
     }
     return total;
 }
+// Adds one record to the event log.
+void Storage::add_log(string op, string pid, int size, string result, string reason) {
+    LogEntry e;
+    e.step = log.size() + 1;   // step number = records so far + 1
+    e.op = op;
+    e.pid = pid;
+    e.size = size;
+    e.result = result;
+    e.reason = reason;
+    log.push_back(e);
+}
 
 AllocResult Storage::allocate(string pid, int size, string strategy) {
     // 1. validate
