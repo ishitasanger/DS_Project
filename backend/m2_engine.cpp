@@ -103,4 +103,21 @@ ReleaseResult Storage::release(string pid) {
     add_log("RELEASE", pid, size, "OK", "OK");
     return {true, "OK"};
 }
+// Saves the event log to a CSV file. Returns true if it worked.
+bool Storage::export_log_csv(string filename) {
+    ofstream out(filename);
+    if (!out.is_open()) {
+        return false;   // file could not be created
+    }
+    // header row
+    out << "step,operation,pid,size,result,reason" << endl;
+    // one row per log record
+    for (int i = 0; i < (int)log.size(); i++) {
+        LogEntry e = log[i];
+        out << e.step << "," << e.op << "," << e.pid << ","
+            << e.size << "," << e.result << "," << e.reason << endl;
+    }
+    out.close();
+    return true;
+}
 
