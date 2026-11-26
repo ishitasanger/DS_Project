@@ -87,7 +87,8 @@ public:
     ReleaseResult release(string pid);
     FreeNode* find_first_fit(int size);   // M2 temporary, M3 will replace
     int count_free();    
-    vector<LogEntry> log;                                                          // M2
+    vector<LogEntry> log; 
+    int last_pos = 0;                      // M2: where the last allocation ended (Next Fit uses it)// M2
     void add_log(string op, string pid, int size, string result, string reason);   // M2
     bool export_log_csv(string filename);                                          // M2
 
