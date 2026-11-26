@@ -1,4 +1,6 @@
 #include "storage.h"
+#include "m3_strategies.h"
+#include "storage.h"
 
 // Checks the request. Returns "OK" if it is fine,
 // otherwise returns the reason it is wrong.
@@ -53,6 +55,19 @@ void Storage::add_log(string op, string pid, int size, string result, string rea
     e.reason = reason;
     log.push_back(e);
 }
+// Turns names like "First Fit" or "Best Fit" into M3's names:
+// "first", "next", "best", "worst". Unknown names become "first".
+string strategy_key(string name) {
+    string s = "";
+    for (int i = 0; i < (int)name.size(); i++) {
+        s += tolower(name[i]);
+    }
+    if (s.find("first") == 0) return "first";
+    if (s.find("next") == 0)  return "next";
+    if (s.find("best") == 0)  return "best";
+    if (s.find("worst") == 0) return "worst";
+    return "first";
+}
 
 AllocResult Storage::allocate(string pid, int size, string strategy) {
     // 1. validate
@@ -62,7 +77,7 @@ AllocResult Storage::allocate(string pid, int size, string strategy) {
         return {false, -1, check};
     }
     // 2. find a hole
-    FreeNode* hole = find_first_fit(size);
+        FreeNode* hole = find_hole(free_head, size, strategy_key(strategy), last_pos);
     // 3. no hole: find out why
     if (hole == nullptr) {
         string why = "FRAGMENTATION";
@@ -78,7 +93,11 @@ AllocResult Storage::allocate(string pid, int size, string strategy) {
         array[i] = pid;
     }
     table[pid] = make_pair(start, size);
-    rebuild_free_list();
+        rebuild_free_list();
+    last_pos = start + size;          // Next Fit starts from here next time
+    if (last_pos >= n) {
+        last_pos = 0;
+    }
     add_log("ALLOCATE", pid, size, "OK", "OK");
     return {true, start, "OK"};
 }
