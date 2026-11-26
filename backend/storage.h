@@ -58,4 +58,6 @@ public:
     string validate(string pid, int size);
     AllocResult allocate(string pid, int size, string strategy);
     ReleaseResult release(string pid);
+    FreeNode* find_first_fit(int size);   // M2 temporary, M3 will replace
+    int count_free();                     // M2
 };
