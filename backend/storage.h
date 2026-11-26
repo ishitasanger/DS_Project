@@ -1,8 +1,10 @@
+
 #pragma once
 #include <string>
 #include <map>
 #include <vector>
 #include <utility>
+#include <fstream>
 using namespace std;
 
 struct AllocResult {
@@ -69,5 +71,6 @@ public:
     FreeNode* find_first_fit(int size);   // M2 temporary, M3 will replace
     int count_free();    
     vector<LogEntry> log;                                                          // M2
-    void add_log(string op, string pid, int size, string result, string reason);   // M2// M2
+    void add_log(string op, string pid, int size, string result, string reason);   // M2
+    bool export_log_csv(string filename);                                          // M2
 };
