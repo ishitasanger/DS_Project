@@ -104,21 +104,3 @@ ReleaseResult Storage::release(string pid) {
     return {true, "OK"};
 }
 
-ReleaseResult Storage::release(string pid) {
-    // 1. the process must exist
-    if (table.count(pid) == 0) {
-        return {false, "UNKNOWN_PID"};
-    }
-    // 2. read where it is stored
-    int start = table[pid].first;
-    int size = table[pid].second;
-    // 3. mark its blocks as free
-    for (int i = start; i < start + size; i++) {
-        array[i] = "";
-    }
-    // 4. remove it from the table
-    table.erase(pid);
-    // 5. rebuild the list (neighbouring holes merge)
-    rebuild_free_list();
-    return {true, "OK"};
-}
