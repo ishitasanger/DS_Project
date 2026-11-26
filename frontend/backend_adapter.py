@@ -12,6 +12,7 @@ import json
 import os
 import subprocess
 import weakref
+import random
 
 _FRONTEND_DIR = os.path.dirname(os.path.abspath(__file__))
 _DEFAULT_BRIDGE = os.path.join(_FRONTEND_DIR, "cpp_bridge.exe")
@@ -112,9 +113,13 @@ class BackendAdapter:
         self._start_bridge()
         self._send({"cmd": "init", "n": self._n})
 
-        use_sample = (total_blocks == 100) if load_sample is None else load_sample
-        if use_sample and self._n == 100:
-            self._load_sample_state()
+        use_sample = True if load_sample is None else load_sample
+
+        if use_sample:
+            if self._n == 100:
+                self._load_sample_state()
+            else:
+                self._load_random_sample_state()
         else:
             st = self.stats()
             self._frag_history = [st.ext_frag]
@@ -193,6 +198,49 @@ class BackendAdapter:
             ("release", "_gap2", 0),
             ("release", "_gap3", 0),
         ]
+
+        def _load_random_sample_state(self):
+          rng = random.Random(self._n)
+
+          free_target = max(1, round(self._n * 0.07))
+          occupied_target = self._n - free_target
+
+          def make_chunks(total):
+            chunks = []
+            while total > 0:
+                size = rng.randint(1, min(10, total))
+                chunks.append(size)
+                total -= size
+            return chunks
+
+          segments = (
+            [(False, size) for size in make_chunks(occupied_target)]
+            + [(True, size) for size in make_chunks(free_target)]
+          )
+
+          rng.shuffle(segments)
+          gap_pids = []
+
+          for index, (is_gap, size) in enumerate(segments):
+            pid = "R{}".format(index + 1)
+
+            self._send({
+                "cmd": "allocate",
+                "pid": pid,
+                "size": size,
+                "strategy": "first"
+            })
+
+            if is_gap:
+                gap_pids.append(pid)
+
+          for pid in gap_pids:
+            self._send({"cmd": "release", "pid": pid})
+
+          st = self.stats()
+          self._frag_history = [st.ext_frag]
+          self._is_sample = True   
+        
         for op, pid, size in steps:
             if op == "alloc":
                 self._send({"cmd": "allocate", "pid": pid, "size": size, "strategy": "first"})

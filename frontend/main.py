@@ -136,7 +136,7 @@ class SimulatorApp:
 
     def reset(self):
         """Reset C++ storage to 100 empty blocks."""
-        self.backend.reset(total_blocks=100)
+        self.backend.reset(total_blocks=self.backend.n)
 
     def export_csv(self, path):
         """Export C++ event log to CSV."""

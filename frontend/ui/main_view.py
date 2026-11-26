@@ -172,8 +172,20 @@ class MainView(ttk.Frame):
             font=(FONT_FAMILY, FONT_SIZE_SMALL), bg=TILE_BG, fg=TEXT_SECONDARY,
             wraplength=760, justify="left",
         ).pack(anchor="w", padx=12, pady=(0, 8))
-        self._grid = BlockGrid(grid_tile.inner, status_callback=self._on_grid_status)
-        self._grid.pack(fill="both", expand=True, padx=6, pady=(0, 8))
+        grid_area = tk.Frame(grid_tile.inner, bg=TILE_BG)
+        grid_area.pack(fill="both", expand=True, padx=6, pady=(0, 8))
+
+        self._grid = BlockGrid(
+            grid_area, status_callback=self._on_grid_status
+        )
+
+        grid_scrollbar = ttk.Scrollbar(
+            grid_area, orient="vertical", command=self._grid.yview
+        )
+        self._grid.configure(yscrollcommand=grid_scrollbar.set)
+
+        self._grid.pack(side="left", fill="both", expand=True)
+        grid_scrollbar.pack(side="right", fill="y")
 
         self._status_var = tk.StringVar(value="Ready — Backend: C++ (M1–M4)")
         tk.Label(
@@ -374,19 +386,36 @@ class MainView(ttk.Frame):
             font=(FONT_FAMILY, 10, "bold"), bg=TILE_BG, fg=TEXT_PRIMARY,
         ).pack(anchor="w", pady=(2, 4))
         cols = ("pid", "start", "size", "end")
+
+        proc_area = tk.Frame(ptile.inner, bg=TILE_BG)
+        proc_area.pack(fill="both", expand=True)
+
         self._proc_tree = ttk.Treeview(
-            ptile.inner, columns=cols, show="tree headings", height=7,
+            proc_area, columns=cols, show="tree headings", height=7,
         )
+
+        proc_scrollbar = ttk.Scrollbar(
+            proc_area, orient="vertical",
+            command=self._proc_tree.yview
+        )
+        self._proc_tree.configure(yscrollcommand=proc_scrollbar.set)
+
         self._proc_tree.heading("#0", text="")
         self._proc_tree.column("#0", width=28, anchor="center", stretch=False)
+
         for c, label, anc in [
             ("pid", "Process", "w"), ("start", "Start", "e"),
             ("size", "Size", "e"), ("end", "End", "e"),
         ]:
             self._proc_tree.heading(c, text=label)
             self._proc_tree.column(c, width=85, anchor=anc)
-        self._proc_tree.pack(fill="both", expand=True)
-        self._proc_tree.bind("<<TreeviewSelect>>", self._on_process_select)
+
+        self._proc_tree.pack(side="left", fill="both", expand=True)
+        proc_scrollbar.pack(side="right", fill="y")
+
+        self._proc_tree.bind(
+            "<<TreeviewSelect>>", self._on_process_select
+        )
 
     def _build_event_log_tile(self, parent):
         ltile = RoundedTile(parent, width=520, height=260, bg_color=TILE_BG)
@@ -396,15 +425,33 @@ class MainView(ttk.Frame):
             font=(FONT_FAMILY, 10, "bold"), bg=TILE_BG, fg=TEXT_PRIMARY,
         ).pack(anchor="w", pady=(2, 4))
         cols = ("step", "op", "pid", "size", "result", "reason")
+
+        # Frame to hold the event log and its scrollbar
+        log_area = tk.Frame(ltile.inner, bg=TILE_BG)
+        log_area.pack(fill="both", expand=True)
+
         self._log_tree = ttk.Treeview(
-            ltile.inner, columns=cols, show="headings", height=7,
+            log_area, columns=cols, show="headings", height=7,
         )
+
+        # Configure column headings and widths
         for c in cols:
             self._log_tree.heading(c, text=c.capitalize())
             w = 50 if c in ("step", "size") else 80
             anc = "e" if c in ("step", "size") else "center"
             self._log_tree.column(c, width=w, anchor=anc)
-        self._log_tree.pack(fill="both", expand=True)
+
+        # Add vertical scrollbar
+        log_scrollbar = ttk.Scrollbar(
+            log_area,
+            orient="vertical",
+            command=self._log_tree.yview
+        )
+        self._log_tree.configure(yscrollcommand=log_scrollbar.set)
+
+        # Display table and scrollbar side by side
+        self._log_tree.pack(side="left", fill="both", expand=True)
+        log_scrollbar.pack(side="right", fill="y")
 
     # ---- Named event handlers ------------------------------------
 
@@ -616,7 +663,7 @@ class MainView(ttk.Frame):
     def _refresh_event_log(self, log):
         """Reload the Event Log with coloured OK/FAIL markers."""
         self._log_tree.delete(*self._log_tree.get_children())
-        for entry in reversed(log[-50:]):
+        for entry in reversed(log):
             is_ok = (entry.result == "OK")
             marker = "● OK" if is_ok else "▲ FAIL"
             tag = "ok" if is_ok else "fail"
